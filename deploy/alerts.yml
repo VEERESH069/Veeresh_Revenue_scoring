@@ -1,0 +1,24 @@
+groups:
+  - name: revenue-recovery
+    rules:
+      - alert: RevenueRecoveryApiDown
+        expr: up{job="revenue-recovery-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Revenue recovery API is unavailable
+      - alert: RevenueRecoveryPersistenceUnavailable
+        expr: revenue_recovery_ready == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Revenue recovery persistence is unavailable
+      - alert: RevenueRecoveryErrorRateHigh
+        expr: rate(revenue_recovery_processing_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Recovery processing error rate exceeds 5%

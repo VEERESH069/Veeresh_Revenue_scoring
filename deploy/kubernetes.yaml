@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: revenue-recovery-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: revenue-recovery-api
+  template:
+    metadata:
+      labels:
+        app: revenue-recovery-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/your-org/revenue-recovery-agent:replace-me
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: revenue-recovery-secrets
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: revenue-recovery-api
+spec:
+  selector:
+    app: revenue-recovery-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: revenue-recovery-api
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+    - hosts: [recovery.example.com]
+      secretName: revenue-recovery-tls
+  rules:
+    - host: recovery.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: revenue-recovery-api
+                port:
+                  number: 8000

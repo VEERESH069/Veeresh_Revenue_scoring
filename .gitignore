@@ -1,0 +1,6 @@
+.env
+__pycache__/
+.pytest_cache/
+audit_fallback.jsonl
+data/synthetic_events.json
+.venv/
